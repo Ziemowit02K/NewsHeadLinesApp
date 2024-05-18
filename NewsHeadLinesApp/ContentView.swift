@@ -25,30 +25,32 @@ struct ContentView: View {
     let category = ["sports","entertainment" , "general" , "health" , "science", "business" , "technology" ]
     @State var categoryChoosen = 0
     
-    let language = ["pl","ar", "ae","at","au", "be","bg", "br","ca","ch","cn","co","cu","cz","de","fr","gb","lt",
+    let language = ["Poland","Argentina", "The United Arab Emirates","Austria","Australia", "Belgium","Bulgaria", "Brazil","Canda","Switzerland","China","Colombia","Cuba","The Czech Republic","Germany","France","Great Britain","Lithuania",
     ]
     @State var languageChoosen = 0
-    
+   
     @State var url : String = "https://newsapi.org/v2/top-headlines?country=pl&category=sports&apiKey=\(apiKey)"
     
     
     var body: some View {
         NavigationView {
+            
             ZStack
             {
                 LinearGradient(colors: [.black,.black], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
+                
                 VStack{
-
                     VStack{
                         Text("News").foregroundColor(.white).font(.system(size: 26, weight: .heavy, design: .monospaced))
                             .underline(pattern:.dash)
                         HStack{
+                            
                             Text("Category:").font(.system(size: 19, weight: .medium, design: .monospaced))
                             Picker(selection: $categoryChoosen, label: Text("Category"))
                             {
                                 ForEach(0 ..< 6)
                                 {
-                                    Text(self.category[$0]).tag($0)
+                                    Text(self.category[$0].capitalized).tag($0)
                                 }
                             }.onChange(of: categoryChoosen, perform: { tag in
                                 url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen)
@@ -67,7 +69,6 @@ struct ContentView: View {
                                 fetchData()
                             })}
                     }
-                
                 .foregroundColor(.white)
                 .accentColor(.white)
                 List(articles, id: \.url){item in
@@ -104,7 +105,52 @@ struct ContentView: View {
     
     func getAPIurl( category: [String], categoryChosen: Int, language: [String], languageChoosen: Int) -> String
     {
-        url = "https://newsapi.org/v2/top-headlines?country=\(language[languageChoosen])&category=\(category[categoryChosen])&apiKey=\(ContentView.apiKey)"
+        var API_language = ""
+        switch languageChoosen
+        {
+        case 0:
+            API_language = "pl"
+        case 1:
+            API_language = "ar"
+        case 2:
+            API_language = "ae"
+        case 3:
+            API_language = "at"
+        case 4:
+            API_language = "au"
+        case 5:
+            API_language = "be"
+        case 6:
+            API_language = "bg"
+        case 7:
+            API_language = "br"
+        case 8:
+            API_language = "ca"
+        case 9:
+            API_language = "ch"
+        case 10:
+            API_language = "cn"
+        case 11:
+            API_language = "co"
+        case 12:
+            API_language = "cu"
+        case 13:
+            API_language = "cz"
+        case 14:
+            API_language = "de"
+        case 15:
+            API_language = "de"
+        case 16:
+            API_language = "fr"
+        case 17:
+            API_language = "gb"
+        case 18:
+            API_language = "lt"
+        default:
+            API_language = "pl"
+        }
+
+        url = "https://newsapi.org/v2/top-headlines?country=\(API_language )&category=\(category[categoryChosen])&apiKey=\(ContentView.apiKey)"
         return url
     }
     
