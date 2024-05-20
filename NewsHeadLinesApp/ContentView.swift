@@ -11,6 +11,8 @@ import URLImage
 
 struct Result : Codable {
     var articles: [Article]
+    var status : String = ""
+    var totalResults : Int
 }
 struct Article: Codable {
     var url: String
@@ -18,19 +20,27 @@ struct Article: Codable {
     var description: String?
     var urlToImage: String?
 }
-struct ContentView: View {
 
+struct ContentView: View {
+//Api:
     @State private var articles = [Article]()
-    static let  apiKey = ""
-    let category = ["sports","entertainment" , "general" , "health" , "science", "business" , "technology" ]
+    @State private var status : String = ""
+    @State private var totalResult : Int = 0
+    static let  apiKey = "0cbd932f8c024e4383ec7735e62f355c"
+    @State var url : String = "https://newsapi.org/v2/top-headlines?country=pl&category=business&apiKey=\(apiKey)&pageSize=10&page=0"
+//Category:
+    let category = ["business","sports","entertainment" , "general" , "health" , "science" , "technology" ]
     @State var categoryChoosen = 0
-    
+//Language:
     let language = ["Poland","Argentina", "The United Arab Emirates","Austria","Australia", "Belgium","Bulgaria", "Brazil","Canda","Switzerland","China","Colombia","Cuba","The Czech Republic","Germany","France","Great Britain","Lithuania",
     ]
-    @State var languageChoosen = 0
-   
-    @State var url : String = "https://newsapi.org/v2/top-headlines?country=pl&category=sports&apiKey=\(apiKey)"
+    @State var languageChoosen : Int = 0
+//Pages:
+    @State var pageNumber : Int = 0
     
+//Button:
+    @State var nextButtonOppacity : Double = 1.00
+    @State var prevButtonOppacity : Double = 0.30
     
     var body: some View {
         NavigationView {
@@ -41,33 +51,58 @@ struct ContentView: View {
                 
                 VStack{
                     VStack{
+                        Spacer()
+                            .frame(minHeight: 10, idealHeight: 48, maxHeight: 20)
+                            .fixedSize()
+                        Divider()
                         Text("News").foregroundColor(.white).font(.system(size: 26, weight: .heavy, design: .monospaced))
-                            .underline(pattern:.dash)
-                        HStack{
+                        Divider()
+                        Spacer()
+                            .frame(minHeight: 10, idealHeight: 18, maxHeight: 20)
+                            .fixedSize()
+                        ZStack{
+                            Color.white
+                                .opacity(0.05)
+                                .frame(width: 350, height: 100)
+                                .cornerRadius(35)
+                        VStack{
+                            HStack{
+                                
+                                Text("Category:").font(.system(size: 19, weight: .medium, design: .monospaced))
+                                Picker(selection: $categoryChoosen, label: Text("Category"))
+                                {
+                                    ForEach(0 ..< 6)
+                                    {
+                                        Text(self.category[$0].capitalized).tag($0)
+                                    }
+                                }.onChange(of: categoryChoosen, perform: { tag in
+                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                    if check_API_response(totalResults: totalResult, status: status)
+                                    {
+                                        fetchData()
+                                    }
+                                    
+                                })}
                             
-                            Text("Category:").font(.system(size: 19, weight: .medium, design: .monospaced))
-                            Picker(selection: $categoryChoosen, label: Text("Category"))
-                            {
-                                ForEach(0 ..< 6)
+                            
+                            
+                            HStack{
+                                Text("Language:").font(.system(size: 19, weight: .medium, design: .monospaced))
+                                Picker(selection: $languageChoosen, label: Text("Language"))
                                 {
-                                    Text(self.category[$0].capitalized).tag($0)
-                                }
-                            }.onChange(of: categoryChoosen, perform: { tag in
-                                url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen)
-                                fetchData()
-                            })}
-                        HStack{
-                            Text("Language:").font(.system(size: 19, weight: .medium, design: .monospaced))
-                            Picker(selection: $languageChoosen, label: Text("Language"))
-                            {
-                                ForEach(0 ..< language.count)
-                                {
-                                    Text(self.language[$0]).tag($0)
-                                }
-                            }.onChange(of: languageChoosen, perform: { tag in
-                                url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen)
-                                fetchData()
-                            })}
+                                    ForEach(0 ..< language.count)
+                                    {
+                                        Text(self.language[$0]).tag($0)
+                                    }
+                                }.onChange(of: languageChoosen, perform: { tag in
+                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                    if check_API_response(totalResults: totalResult, status: status)
+                                    {
+                                        fetchData()
+                                    }
+                        })}
+                        }
+                    }
                     }
                 .foregroundColor(.white)
                 .accentColor(.white)
@@ -93,17 +128,78 @@ struct ContentView: View {
                             }
                         }
                     }
-                    
                 } .onAppear(perform: fetchData)
-                    .frame(height: 600)
+                    .frame(height: 550)
+                    Spacer().frame(minHeight: 10, idealHeight: 20, maxHeight: 22)
+                    HStack
+                    {
+                        
+                        Button("\(Image(systemName: "arrow.left")) Previous Side")
+                        {
+                           
+                            
+                            if(pageNumber != 0)
+                            {
+                                prevButtonOppacity=1.0
+                                pageNumber -= 1
+                                if(check_API_response(totalResults: totalResult, status: status))
+                                {
+                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                    fetchData()
+                                    prevButtonOppacity = 1.0
+                                    nextButtonOppacity = 1.0
+                                }
+                                else
+                                {
+                                    prevButtonOppacity = 0.3
+                                }
+                            }
+                        }.opacity(prevButtonOppacity)
+                        Spacer().frame(minWidth: 10, idealWidth: 115, maxWidth: 150).fixedSize()
+                        Button("Next Page \(Image(systemName: "arrow.right"))")
+                        {
+                            pageNumber += 1
+                            if pageNumber != 0
+                            {
+                                prevButtonOppacity += 1.0
+                            }
+                                if check_API_response(totalResults: totalResult, status: status)
+                                {
+                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                    fetchData()
+                                    nextButtonOppacity = 1.0
+                                   
+                                }
+                                else
+                                {
+                                    nextButtonOppacity = 0.3
+                                    prevButtonOppacity = 1.0
+                                }
+                        }.opacity(nextButtonOppacity)
+                        
+                    }.font(.system(size: 14, weight: .medium, design: .monospaced))
+                    Spacer()
                 
             } .foregroundColor(.white)
                 .colorScheme(.dark).ignoresSafeArea()
         }
             }.accentColor(.black)
         }
+    func check_API_response(totalResults: Int, status: String) -> Bool
+    {
+        if (10*pageNumber<=totalResults && status == "ok")
+        {
+            return true
+        }
+        else
+        {
+            return false
+        }
+    }
     
-    func getAPIurl( category: [String], categoryChosen: Int, language: [String], languageChoosen: Int) -> String
+    
+    
+    func getAPIurl( category: [String], categoryChosen: Int, language: [String], languageChoosen: Int , pageNumber: Int) -> String
     {
         var API_language = ""
         switch languageChoosen
@@ -150,7 +246,7 @@ struct ContentView: View {
             API_language = "pl"
         }
 
-        url = "https://newsapi.org/v2/top-headlines?country=\(API_language )&category=\(category[categoryChosen])&apiKey=\(ContentView.apiKey)"
+        url = "https://newsapi.org/v2/top-headlines?country=\(API_language )&category=\(category[categoryChosen])&apiKey=\(ContentView.apiKey)&pageSize=10&page=\(pageNumber)"
         return url
     }
     
@@ -167,6 +263,8 @@ struct ContentView: View {
                     JSONDecoder().decode(Result.self, from: data){
                     DispatchQueue.main.async {
                         self.articles = decodedResult.articles
+                        self.status = decodedResult.status
+                        self.totalResult = decodedResult.totalResults
                     }
                     return
                 }
@@ -175,6 +273,8 @@ struct ContentView: View {
         }.resume()
     }
 }
+
+
 #Preview {
     ContentView()
 }
