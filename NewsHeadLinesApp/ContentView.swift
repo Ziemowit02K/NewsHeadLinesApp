@@ -26,8 +26,8 @@ struct ContentView: View {
     @State private var articles = [Article]()
     @State private var status : String = ""
     @State private var totalResult : Int = 0
-    static let  apiKey = "0cbd932f8c024e4383ec7735e62f355c"
-    @State var url : String = "https://newsapi.org/v2/top-headlines?country=pl&category=business&apiKey=\(apiKey)&pageSize=10&page=0"
+    static let  apiKey = ""
+    @State var url : String = "https://newsapi.org/v2/top-headlines?country=pl&category=business&apiKey=\(apiKey)&pageSize=10&page=1"
 //Category:
     let category = ["business","sports","entertainment" , "general" , "health" , "science" , "technology" ]
     @State var categoryChoosen = 0
@@ -136,45 +136,79 @@ struct ContentView: View {
                         
                         Button("\(Image(systemName: "arrow.left")) Previous Side")
                         {
-                           
-                            
                             if(pageNumber != 0)
                             {
                                 prevButtonOppacity=1.0
-                                pageNumber -= 1
+                                url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                fetchData()
                                 if(check_API_response(totalResults: totalResult, status: status))
                                 {
+                                    pageNumber -= 1
                                     url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
-                                    fetchData()
+                                    
                                     prevButtonOppacity = 1.0
                                     nextButtonOppacity = 1.0
-                                }
-                                else
-                                {
-                                    prevButtonOppacity = 0.3
+                                    fetchData()
                                 }
                             }
+                            else
+                            {
+//                                url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+//                                fetchData()
+                                prevButtonOppacity = 0.3
+                                
+                            }
+                          
                         }.opacity(prevButtonOppacity)
                         Spacer().frame(minWidth: 10, idealWidth: 115, maxWidth: 150).fixedSize()
                         Button("Next Page \(Image(systemName: "arrow.right"))")
                         {
-                            pageNumber += 1
-                            if pageNumber != 0
-                            {
-                                prevButtonOppacity += 1.0
-                            }
-                                if check_API_response(totalResults: totalResult, status: status)
+                            
+                                if pageNumber != 0
                                 {
-                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
-                                    fetchData()
-                                    nextButtonOppacity = 1.0
-                                   
+                                    prevButtonOppacity = 1.0
+//                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+//                                    fetchData()
+                                    if check_API_response(totalResults: totalResult, status: status)
+                                    {
+                                        pageNumber += 1
+                                        url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                        fetchData()
+                                        nextButtonOppacity = 1.0
+                                       
+                                    }
+                                    else
+                                    {
+                                        nextButtonOppacity = 0.3
+                                        prevButtonOppacity = 1.0
+                                        url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                        fetchData()
+                                    }
+                                 
                                 }
                                 else
                                 {
-                                    nextButtonOppacity = 0.3
-                                    prevButtonOppacity = 1.0
+                                    prevButtonOppacity = 0.3
+//                                    url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+//                                    fetchData()
+                                    if check_API_response(totalResults: totalResult, status: status)
+                                    {
+                                        pageNumber += 1
+                                        url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                        fetchData()
+                                        nextButtonOppacity = 1.0
+                                       
+                                    }
+                                    else
+                                    {
+                                        nextButtonOppacity = 0.3
+                                        prevButtonOppacity = 1.0
+                                        url = getAPIurl(category: category, categoryChosen: categoryChoosen, language: language, languageChoosen: languageChoosen, pageNumber: pageNumber)
+                                        fetchData()
+                                    }
                                 }
+                               
+                            
                         }.opacity(nextButtonOppacity)
                         
                     }.font(.system(size: 14, weight: .medium, design: .monospaced))
@@ -235,12 +269,10 @@ struct ContentView: View {
         case 14:
             API_language = "de"
         case 15:
-            API_language = "de"
-        case 16:
             API_language = "fr"
-        case 17:
+        case 16:
             API_language = "gb"
-        case 18:
+        case 17:
             API_language = "lt"
         default:
             API_language = "pl"
